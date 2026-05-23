@@ -1,0 +1,68 @@
+const express = require('express');
+const router = express.Router();
+const Session = require('../models/Session');
+const {
+  startTechnicalInterview,
+  evaluateTechnicalSolution,
+  runHRSession,
+  generateHRReport
+} = require('../services/mockAgent');
+
+router.post('/technical/start', async (req, res) => {
+  try {
+    const { difficulty, topic } = req.body;
+    const result = await startTechnicalInterview(difficulty, topic);
+    const session = await Session.create({
+      mode: 'mock-technical', input: topic, output: result
+    });
+    res.json({ success: true, data: result, sessionId: session._id });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/technical/evaluate', async (req, res) => {
+  try {
+    const { problem, code, language, timeUsed, sessionId } = req.body;
+    const result = await evaluateTechnicalSolution(
+      problem, code, language, timeUsed
+    );
+    await Session.findByIdAndUpdate(sessionId, {
+      output: result,
+      score: result.assessment?.overallScore
+    });
+    res.json({ success: true, data: result });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/hr/message', async (req, res) => {
+  try {
+    const { conversationHistory, userAnswer, questionNumber, interviewType } = req.body;
+    const result = await runHRSession(
+      conversationHistory, userAnswer, questionNumber, interviewType
+    );
+    res.json({ success: true, data: result });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/hr/report', async (req, res) => {
+  try {
+    const { conversationHistory, allEvaluations, interviewType } = req.body;
+    const result = await generateHRReport(
+      conversationHistory, allEvaluations, interviewType
+    );
+    await Session.create({
+      mode: 'mock-hr', input: interviewType,
+      output: result, score: result.overallScore
+    });
+    res.json({ success: true, data: result });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+module.exports = router;
