@@ -1,9 +1,11 @@
+server/.env
 node_modules/
 # Dependency directories
 node_modules/
 jspm_packages/
 
 # Environment Variables (CRITICAL)
+server/.env
 .env
 .env.local
 .env.development.local

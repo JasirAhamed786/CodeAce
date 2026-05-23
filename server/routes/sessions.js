@@ -4,27 +4,18 @@ const Session = require('../models/Session');
 
 router.get('/:userId', async (req, res) => {
   try {
-    const sessions = await Session.find({ userId: req.params.userId })
-      .sort({ timestamp: -1 });
-    res.json({ success: true, data: sessions });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
-  }
-});
+    const rawSessions = await Session.find({ userId: req.params.userId }).sort({ createdAt: -1, timestamp: -1 });
+    
+    // Safety mapping: Ensures the React UI ALWAYS gets the fields it expects
+    const safeSessions = rawSessions.map(s => ({
+      _id: s._id,
+      type: s.type || s.mode || 'Unknown Session',
+      summary: s.summary || s.input?.substring(0, 50) + '...' || 'Session completed.',
+      createdAt: s.createdAt || s.timestamp || new Date(),
+      score: s.score || 0
+    }));
 
-router.get('/:userId/weakpatterns', async (req, res) => {
-  try {
-    const sessions = await Session.find({ userId: req.params.userId });
-    const counts = {};
-    sessions.forEach(s => {
-      const p = s.output?.classification?.pattern
-             || s.output?.detection?.primaryPattern;
-      if (p) counts[p] = (counts[p] || 0) + 1;
-    });
-    const sorted = Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([pattern, count]) => ({ pattern, count }));
-    res.json({ success: true, data: sorted });
+    res.json({ success: true, data: safeSessions });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
