@@ -97,14 +97,14 @@ export default function ProblemSolver() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Classification</h3>
               <div className="flex items-center gap-3">
                 <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-4 py-1.5 rounded-full text-sm font-semibold">
-                  {result.classification.pattern}
+                  {result?.classification?.pattern || 'Analysis pending'}
                 </span>
                 <span className="text-slate-400 text-sm flex items-center gap-1">
-                  🎯 {result.classification.confidence}% Match
+                  🎯 {result?.classification?.confidence || 0}% Match
                 </span>
               </div>
               <p className="text-slate-300 text-sm leading-relaxed">
-                {result.classification.reasoning}
+                {result?.classification?.reasoning || 'No reasoning provided.'}
               </p>
             </div>
 
@@ -113,10 +113,10 @@ export default function ProblemSolver() {
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Agent Trail</h3>
               <div className="space-y-3">
                 {[
-                  `Identified pattern: ${result.classification.pattern}`,
-                  `Insight: ${result.plan.keyInsight}`,
-                  `Brute Force: O(${result.solutions.brute.timeComplexity}) → Optimal: O(${result.solutions.optimal.timeComplexity})`,
-                  `Found ${result.critique.edgeCases.length} critical edge cases`,
+                  `Identified pattern: ${result?.classification?.pattern || 'Unknown'}`,
+                  `Insight: ${result?.plan?.keyInsight || 'N/A'}`,
+                  `Brute Force: O(${result?.solutions?.brute?.timeComplexity || '?'}) → Optimal: O(${result?.solutions?.optimal?.timeComplexity || '?'})`,
+                  `Found ${(result?.critique?.edgeCases || []).length} critical edge cases`,
                 ].map((s, i) => (
                   <div key={i} className="flex items-start gap-3 text-sm">
                     <div className="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] text-slate-400 flex-shrink-0 mt-0.5">
@@ -156,14 +156,14 @@ export default function ProblemSolver() {
                   <span className="text-lg">⏱️</span>
                   <div>
                     <p className="text-[10px] text-slate-400 uppercase font-bold">Time</p>
-                    <p className="text-sm text-slate-200 font-mono">O({result.solutions[tab].timeComplexity})</p>
+                    <p className="text-sm text-slate-200 font-mono">O({result?.solutions?.[tab]?.timeComplexity || '?'})</p>
                   </div>
                 </div>
                 <div className="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg flex items-center gap-2">
                   <span className="text-lg">💾</span>
                   <div>
                     <p className="text-[10px] text-slate-400 uppercase font-bold">Space</p>
-                    <p className="text-sm text-slate-200 font-mono">O({result.solutions[tab].spaceComplexity})</p>
+                    <p className="text-sm text-slate-200 font-mono">O({result?.solutions?.[tab]?.spaceComplexity || '?'})</p>
                   </div>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function ProblemSolver() {
                 <Editor
                   height="300px"
                   language={language.toLowerCase()}
-                  value={result.solutions[tab].code}
+                  value={result?.solutions?.[tab]?.code || '// Code not generated properly'}
                   theme="vs-dark"
                   options={{
                     readOnly: true,
@@ -189,7 +189,7 @@ export default function ProblemSolver() {
               <div className="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
                 <p className="text-slate-300 text-sm leading-relaxed">
                   <span className="font-bold text-slate-200 mr-2">How it works:</span>
-                  {result.solutions[tab].explanation}
+                  {result?.solutions?.[tab]?.explanation || 'No explanation provided.'}
                 </p>
               </div>
             </div>
@@ -202,11 +202,15 @@ export default function ProblemSolver() {
                 <span>⚠️</span> Edge Cases to Consider
               </h3>
               <ul className="space-y-3">
-                {result.critique.edgeCases.map((e, i) => (
-                  <li key={i} className="text-slate-400 text-sm flex items-start gap-3">
-                    <span className="text-slate-600 mt-0.5">•</span> {e}
-                  </li>
-                ))}
+                {(result?.critique?.edgeCases || []).length > 0 ? (
+                  result.critique.edgeCases.map((e, i) => (
+                    <li key={i} className="text-slate-400 text-sm flex items-start gap-3">
+                      <span className="text-slate-600 mt-0.5">•</span> {e}
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-slate-500 text-sm italic">No edge cases identified.</li>
+                )}
               </ul>
             </div>
 
@@ -215,11 +219,15 @@ export default function ProblemSolver() {
                 <span>💡</span> Senior Interview Tips
               </h3>
               <ul className="space-y-3">
-                {result.critique.interviewTips.map((t, i) => (
-                  <li key={i} className="text-slate-400 text-sm flex items-start gap-3">
-                    <span className="text-green-500 mt-0.5">✓</span> {t}
-                  </li>
-                ))}
+                {(result?.critique?.interviewTips || []).length > 0 ? (
+                  result.critique.interviewTips.map((t, i) => (
+                    <li key={i} className="text-slate-400 text-sm flex items-start gap-3">
+                      <span className="text-green-500 mt-0.5">✓</span> {t}
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-slate-500 text-sm italic">No interview tips available.</li>
+                )}
               </ul>
             </div>
           </div>

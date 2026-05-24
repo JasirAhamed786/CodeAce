@@ -13,6 +13,7 @@ export default function PatternRecognizer() {
 
   // Helper to color-code difficulty
   const getDifficultyColor = (diff) => {
+    if (!diff) return 'text-slate-400 bg-slate-800 border-slate-700';
     const d = diff.toLowerCase();
     if (d === 'easy') return 'text-green-400 bg-green-400/10 border-green-500/20';
     if (d === 'medium') return 'text-yellow-400 bg-yellow-400/10 border-yellow-500/20';
@@ -102,16 +103,16 @@ export default function PatternRecognizer() {
             <div className="bg-blue-500/10 border-b border-slate-700 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <h2 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Primary Match</h2>
-                <div className="text-3xl font-black text-white">{result.detection.primaryPattern}</div>
+                <div className="text-3xl font-black text-white">{result?.detection?.primaryPattern || 'Unknown Pattern'}</div>
               </div>
               <div className="bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl flex items-center gap-3 shadow-inner">
                 <span className="text-sm text-slate-400">Confidence</span>
-                <span className="text-xl font-bold text-blue-400">{result.detection.confidence}%</span>
+                <span className="text-xl font-bold text-blue-400">{result?.detection?.confidence || 0}%</span>
               </div>
             </div>
             <div className="p-6">
               <h3 className="text-sm font-bold text-slate-300 mb-2">Why this pattern?</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{result.detection.whyThisPattern}</p>
+              <p className="text-slate-400 text-sm leading-relaxed">{result?.detection?.whyThisPattern || 'No explanation provided.'}</p>
             </div>
           </div>
 
@@ -129,7 +130,7 @@ export default function PatternRecognizer() {
                 <Editor
                   height="300px"
                   language={language.toLowerCase()}
-                  value={result.expansion.patternTemplate}
+                  value={result?.expansion?.patternTemplate || '// Code template unavailable'}
                   theme="vs-dark"
                   options={{
                     readOnly: true,
@@ -141,11 +142,11 @@ export default function PatternRecognizer() {
                 />
                 <div className="p-5 bg-slate-800/40 border-t border-slate-700/50">
                   <p className="text-sm text-slate-300 mb-3">
-                    <span className="font-bold text-slate-200">How it works:</span> {result.expansion.templateExplanation}
+                    <span className="font-bold text-slate-200">How it works:</span> {result?.expansion?.templateExplanation || 'N/A'}
                   </p>
                   <p className="text-xs text-slate-400 font-mono bg-slate-900 p-3 rounded-lg border border-slate-700">
                     <span className="text-blue-400 font-bold mr-2">Key Variables:</span> 
-                    {result.expansion.keyVariables}
+                    {result?.expansion?.keyVariables || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -161,39 +162,45 @@ export default function PatternRecognizer() {
                   Practice Problems
                 </h3>
                 <div className="space-y-3">
-                  {result.expansion.similarProblems.map((prob, i) => (
-                    <div key={i} className="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-colors cursor-pointer group">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm font-bold text-slate-200 group-hover:text-blue-400 transition-colors">
-                          {prob.number ? `${prob.number}. ` : ''}{prob.name}
-                        </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${getDifficultyColor(prob.difficulty)}`}>
-                          {prob.difficulty}
-                        </span>
+                  {(result?.expansion?.similarProblems || []).length > 0 ? (
+                    result.expansion.similarProblems.map((prob, i) => (
+                      <div key={i} className="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-colors cursor-pointer group">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-sm font-bold text-slate-200 group-hover:text-blue-400 transition-colors">
+                            {prob.number ? `${prob.number}. ` : ''}{prob.name}
+                          </span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${getDifficultyColor(prob.difficulty)}`}>
+                            {prob.difficulty}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 line-clamp-2">{prob.whySimilar}</p>
                       </div>
-                      <p className="text-xs text-slate-500 line-clamp-2">{prob.whySimilar}</p>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-xs italic">No similar problems identified.</p>
+                  )}
                 </div>
               </div>
 
               {/* Alternative Patterns */}
-              {result.detection.alternativePatterns && result.detection.alternativePatterns.length > 0 && (
-                <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-xl">
-                  <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wide mb-4 flex items-center gap-2">
-                    <span className="text-slate-500">🔍</span> Also Considered
-                  </h3>
-                  <div className="space-y-3">
-                    {result.detection.alternativePatterns.map((alt, i) => (
+              <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-xl">
+                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wide mb-4 flex items-center gap-2">
+                  <span className="text-slate-500">🔍</span> Also Considered
+                </h3>
+                <div className="space-y-3">
+                  {(result?.detection?.alternativePatterns || []).length > 0 ? (
+                    result.detection.alternativePatterns.map((alt, i) => (
                       <div key={i} className="border-l-2 border-slate-600 pl-3 py-1">
                         <h4 className="text-sm font-bold text-slate-300">{alt.name}</h4>
                         <p className="text-xs text-slate-500 mt-1">{alt.reason}</p>
                         <p className="text-xs text-slate-400 mt-1 italic">Tradeoff: {alt.tradeoff}</p>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-xs italic">No alternative patterns considered.</p>
+                  )}
                 </div>
-              )}
+              </div>
 
             </div>
           </div>

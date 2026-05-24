@@ -100,16 +100,16 @@ export default function ComplexityAnalyzer() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 flex flex-col justify-center">
               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Time Complexity</span>
-              <span className="text-2xl font-mono text-teal-400">O({result.timeComplexity})</span>
+              <span className="text-2xl font-mono text-teal-400">O({result?.timeComplexity || '?'})</span>
             </div>
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 flex flex-col justify-center">
               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Space Complexity</span>
-              <span className="text-2xl font-mono text-emerald-400">O({result.spaceComplexity})</span>
+              <span className="text-2xl font-mono text-emerald-400">O({result?.spaceComplexity || '?'})</span>
             </div>
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 flex flex-col justify-center col-span-2">
               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Bottleneck / Dominant Term</span>
-              <span className="text-sm font-medium text-slate-200">{result.bottleneck}</span>
-              <span className="text-xs text-slate-400 mt-1 font-mono">Term: {result.dominantTerm}</span>
+              <span className="text-sm font-medium text-slate-200">{result?.bottleneck || 'None identified'}</span>
+              <span className="text-xs text-slate-400 mt-1 font-mono">Term: {result?.dominantTerm || 'N/A'}</span>
             </div>
           </div>
 
@@ -130,17 +130,25 @@ export default function ComplexityAnalyzer() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/50 text-sm">
-                    {result.lineByLineAnalysis.map((item, i) => (
-                      <tr key={i} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 px-4 text-slate-300 font-mono text-xs">{item.line}</td>
-                        <td className="py-3 px-4 text-slate-400">{item.operation}</td>
-                        <td className="py-3 px-4">
-                          <span className="bg-slate-800 text-teal-400 border border-slate-700 px-2 py-1 rounded text-xs font-mono">
-                            {item.complexityContribution}
-                          </span>
+                    {(result?.lineByLineAnalysis || []).length > 0 ? (
+                      result.lineByLineAnalysis.map((item, i) => (
+                        <tr key={i} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="py-3 px-4 text-slate-300 font-mono text-xs">{item.line}</td>
+                          <td className="py-3 px-4 text-slate-400">{item.operation}</td>
+                          <td className="py-3 px-4">
+                            <span className="bg-slate-800 text-teal-400 border border-slate-700 px-2 py-1 rounded text-xs font-mono">
+                              {item.complexityContribution}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" className="py-4 text-center text-slate-500 text-xs italic">
+                          No line-by-line data available.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -153,14 +161,18 @@ export default function ComplexityAnalyzer() {
                   <span>💡</span> Optimizations
                 </h3>
                 <div className="space-y-4">
-                  {result.optimizationSuggestions.map((opt, i) => (
-                    <div key={i} className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
-                      <p className="text-sm text-slate-300 mb-2">{opt.suggestion}</p>
-                      <span className="text-xs text-emerald-400 font-medium bg-emerald-400/10 px-2 py-1 rounded">
-                        Expected: {opt.expectedImprovement}
-                      </span>
-                    </div>
-                  ))}
+                  {(result?.optimizationSuggestions || []).length > 0 ? (
+                    result.optimizationSuggestions.map((opt, i) => (
+                      <div key={i} className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                        <p className="text-sm text-slate-300 mb-2">{opt.suggestion}</p>
+                        <span className="text-xs text-emerald-400 font-medium bg-emerald-400/10 px-2 py-1 rounded">
+                          Expected: {opt.expectedImprovement}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-xs italic">No optimizations suggested.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -168,7 +180,7 @@ export default function ComplexityAnalyzer() {
           </div>
 
           {/* Improved Code Display */}
-          {result.improvedCode && (
+          {result?.improvedCode && (
             <div className="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
               <div className="bg-slate-800/80 p-4 border-b border-slate-700 flex justify-between items-center">
                 <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wide">Optimized Code Output</h3>

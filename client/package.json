@@ -11,6 +11,8 @@
     "@monaco-editor/react": "^4.4.6",
     "axios": "^1.4.0",
     "codeace": "file:..",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.14.1"

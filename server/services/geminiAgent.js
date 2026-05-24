@@ -1,12 +1,11 @@
 const axios = require('axios');
 const { GoogleGenAI } = require('@google/genai');
 
-// Initialize Gemini SDK if the key exists
 const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
-// ── BASE CALLER ──────────────────────────────────────────
+// ── THE INVINCIBLE PARSER (Base Caller) ─────────────────────────
 const callAI = async (systemPrompt, userMessage) => {
-  const useGemini = !!process.env.GEMINI_API_KEY;
+  const useGemini = !!(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim() !== "");
 
   if (!useGemini && !process.env.GROQ_API_KEY) {
     throw new Error('Missing GROQ_API_KEY or GEMINI_API_KEY in server/.env');
@@ -14,158 +13,147 @@ const callAI = async (systemPrompt, userMessage) => {
 
   try {
     let text = '';
+    const fullSystemPrompt = `${systemPrompt} Return ONLY a raw JSON object. Do not include markdown code blocks, do not include conversational text, do not include explanations.`;
 
     if (useGemini) {
-      const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+      const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
       const response = await ai.models.generateContent({
         model: modelName,
         contents: userMessage,
-        config: {
-          systemInstruction: systemPrompt,
-          responseMimeType: 'application/json',
-          temperature: 0.2 // Lowered to guarantee strict JSON formatting
-        }
+        config: { systemInstruction: fullSystemPrompt, responseMimeType: 'application/json', temperature: 0.1 }
       });
       text = response.text;
     } else {
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMessage }
-          ],
-          max_tokens: 4000, 
-          temperature: 0.2
-        },
-        { headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' }, timeout: 120000 }
-      );
+      const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+        messages: [{ role: 'system', content: fullSystemPrompt }, { role: 'user', content: userMessage }],
+        max_tokens: 4000, temperature: 0.1
+      }, { headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' }, timeout: 120000 });
       text = response.data.choices[0].message.content;
     }
 
-    // ── AGGRESSIVE JSON EXTRACTOR ──
-    let cleanText = String(text).replace(/```json|```/g, '').trim();
-    const firstBrace = cleanText.indexOf('{');
-    const lastBrace = cleanText.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1) {
-      cleanText = cleanText.substring(firstBrace, lastBrace + 1);
-    }
+    // ── THE INVINCIBLE CLEANER ──
+    // Strip everything before the first '{' and after the last '}'
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end === -1) throw new Error("No JSON object found");
+
+    let cleanText = text.substring(start, end + 1)
+                        .replace(/```json|```/g, '')
+                        .replace(/[\r\n]+/g, " "); // Flatten newlines to prevent parsing errors
 
     return JSON.parse(cleanText);
   } catch (e) {
-    let detail = e.message;
-    if (e.response && e.response.data) detail = JSON.stringify(e.response.data);
-    throw new Error(`AI Agent failed: ${detail}`);
+    console.error("AI Parse Error. Raw Output:", text);
+    throw new Error(`AI Agent parsing failed: ${e.message}`);
   }
 };
 
-// ── AGENT 1: PROBLEM SOLVER (Full-Fidelity Mega-Prompt) ────────────────
+// ── AGENTS ──────────────────────────────────────────────────────────────
+
 const runSolverChain = async (problem, language) => {
   return await callAI(
-    "You are a FAANG Principal Engineer and DSA Architect. Return ONLY valid JSON.",
-    `Solve this problem entirely in one step. Problem: ${problem} | Language: ${language}
-    Return EXACTLY this JSON structure:
+    `You are a strict FAANG Principal Engineer. You MUST populate EVERY field in the JSON schema. Do not leave 'explanation', 'edgeCases', or 'interviewTips' empty. Return JSON only.`,
+    `Problem to solve: ${problem}. 
+    LANGUAGE: ${language}. 
+    
+    You MUST return a JSON object with this EXACT structure, filling in ALL detailed string explanations and arrays:
     {
-      "classification": { "pattern": "string", "confidence": 0, "reasoning": "string", "timeHint": "string", "spaceHint": "string" },
-      "plan": { "bruteForceApproach": "string", "optimalApproach": "string", "keyInsight": "string", "tradeoff": "string" },
-      "solutions": {
-        "brute": { "code": "string", "timeComplexity": "string", "spaceComplexity": "string", "explanation": "string" },
-        "optimal": { "code": "string", "timeComplexity": "string", "spaceComplexity": "string", "explanation": "string" }
+      "classification": { 
+        "pattern": "string (e.g. Sliding Window)", 
+        "confidence": 95, 
+        "reasoning": "string" 
       },
-      "critique": { "edgeCases": ["string"], "improvements": ["string"], "interviewTips": ["string"], "commonMistakes": ["string"] }
+      "plan": { 
+        "keyInsight": "string" 
+      },
+      "solutions": { 
+        "brute": { 
+          "code": "string", 
+          "timeComplexity": "string", 
+          "spaceComplexity": "string", 
+          "explanation": "Detailed explanation of how the brute force code works." 
+        }, 
+        "optimal": { 
+          "code": "string", 
+          "timeComplexity": "string", 
+          "spaceComplexity": "string", 
+          "explanation": "Detailed explanation of how the optimal code works." 
+        } 
+      }, 
+      "critique": { 
+        "edgeCases": ["Specify edge case 1", "Specify edge case 2"], 
+        "interviewTips": ["Actionable tip 1", "Actionable tip 2"] 
+      } 
     }`
   );
 };
 
-// ── AGENT 2: COMPLEXITY ANALYZER (Full-Fidelity) ─────────────────────────
 const runAnalyzerAgent = async (code, language) => {
   return await callAI(
-    "You are a computer science professor. Return ONLY valid JSON matching the structure.",
-    `Analyze this ${language} code completely.\nCode: ${code}
-    Return EXACTLY this JSON structure:
-    {
-      "timeComplexity": "string",
-      "spaceComplexity": "string",
-      "lineByLineAnalysis": [{ "line": "string", "operation": "string", "complexityContribution": "string" }],
-      "bottleneck": "string",
-      "dominantTerm": "string",
-      "optimizationSuggestions": [{ "suggestion": "string", "expectedImprovement": "string" }],
-      "improvedCode": "string"
+    `You are a strict CS Professor. You MUST populate EVERY field in the JSON schema. Do not leave 'lineByLineAnalysis' or 'optimizationSuggestions' empty. Return JSON only.`,
+    `Analyze this ${language} code: ${code}. 
+    
+    You MUST return a JSON object with this EXACT structure, filling in ALL arrays with detailed data:
+    { 
+      "isValid": true, 
+      "error": null, 
+      "timeComplexity": "O(n)", 
+      "spaceComplexity": "O(n)", 
+      "bottleneck": "Detailed explanation of the bottleneck", 
+      "dominantTerm": "The dominating math term",
+      "lineByLineAnalysis": [
+        { "line": "for i := 0; i < n; i++", "operation": "Looping through array", "complexityContribution": "O(n)" },
+        { "line": "sum += i", "operation": "Addition", "complexityContribution": "O(1)" }
+      ],
+      "optimizationSuggestions": [
+        { "suggestion": "Actionable advice on how to improve this.", "expectedImprovement": "O(n) -> O(log n)" }
+      ],
+      "improvedCode": "Write the improved code here" 
     }`
   );
 };
 
-// ── AGENT 3: PATTERN RECOGNIZER (Full-Fidelity Mega-Prompt) ────────────
 const runPatternAgent = async (problem, language) => {
   return await callAI(
-    "You are a DSA Pattern Expert. Return ONLY valid JSON.",
-    `Analyze this problem and provide the pattern template. Problem: ${problem} | Language: ${language}
-    Return EXACTLY this JSON structure:
+    `You are a strict Senior FAANG Interviewer. You MUST populate EVERY field in the JSON schema. Do not leave 'similarProblems' or 'alternativePatterns' empty. Return JSON only.`,
+    `Analyze this problem description: "${problem}". 
+    Target Language: ${language}.
+    
+    You MUST return a JSON object with this EXACT structure, filling in ALL arrays with detailed data:
     {
       "detection": {
-        "primaryPattern": "string",
-        "confidence": 0,
-        "whyThisPattern": "string",
-        "alternativePatterns": [{ "name": "string", "reason": "string", "tradeoff": "string" }]
+        "primaryPattern": "string (e.g. Sliding Window)",
+        "confidence": 95,
+        "whyThisPattern": "Detailed explanation based on problem keywords.",
+        "alternativePatterns": [
+          { "name": "Prefix Sum", "reason": "Could also work if...", "tradeoff": "Uses O(N) space" }
+        ]
       },
       "expansion": {
-        "patternTemplate": "string",
-        "similarProblems": [{ "name": "string", "difficulty": "string", "number": 0, "whySimilar": "string" }],
-        "templateExplanation": "string",
-        "keyVariables": "string"
+        "patternTemplate": "Provide the actual code template in the requested language",
+        "templateExplanation": "Explain how the template works.",
+        "keyVariables": "List key variables (e.g., left, right, window_sum)",
+        "similarProblems": [
+          { "name": "Maximum Subarray", "number": 53, "difficulty": "Medium", "whySimilar": "Uses the same contiguous subarray concept." }
+        ]
       }
     }`
   );
 };
 
-// ── AGENT 4: CODE REVIEW (Full-Fidelity Mega-Prompt) ───────────────────
 const runReviewAgent = async (code, problem, language) => {
   return await callAI(
-    "You are a strict FAANG code reviewer. Return ONLY valid JSON.",
-    `Review this code against the problem. Code: ${code} | Problem: ${problem} | Language: ${language}
-    Return EXACTLY this JSON structure:
-    {
-      "understanding": { "understanding": "string", "isCorrect": true, "majorIssues": ["string"] },
-      "critique": {
-        "overallScore": 0,
-        "bugs": [{ "line": 0, "issue": "string", "fix": "string" }],
-        "edgeCasesMissed": ["string"],
-        "styleIssues": ["string"]
-      },
-      "refactor": { "refactoredCode": "string", "changesExplained": ["string"], "seniorTips": ["string"] }
-    }`
+    `You are a FAANG reviewer. Return valid JSON only. Booleans must be true/false.`,
+    `Code: ${code}. Return JSON: { "understanding": { "isCorrect": true }, "critique": { "overallScore": 10, "bugs": [] }, "refactor": { "refactoredCode": "string" } }`
   );
 };
 
-// ── AGENT 5: CHEAT SHEET GENERATOR (Full-Fidelity Mega-Prompt) ─────────
 const runCheatSheetAgent = async (topic, language) => {
   return await callAI(
-    "You are a DSA Curriculum Designer. Return ONLY valid JSON.",
-    `Create a comprehensive cheat sheet. Topic: ${topic} | Language: ${language}
-    Return EXACTLY this JSON structure:
-    {
-      "structure": {
-        "corePatterns": ["string"],
-        "mustKnowAlgorithms": ["string"],
-        "commonMistakes": ["string"]
-      },
-      "content": {
-        "title": "string",
-        "patterns": [{ "name": "string", "template": "string", "timeComplexity": "string", "spaceComplexity": "string", "whenToUse": "string" }],
-        "tips": ["string"],
-        "commonMistakes": ["string"],
-        "mustKnowProblems": [{ "name": "string", "difficulty": "string", "pattern": "string", "keyIdea": "string" }]
-      }
-    }`
+    `You are a DSA Curriculum Designer. Return JSON only.`,
+    `Create cheat sheet for: ${topic}. Return JSON: { "title": "string", "overview": "string", "patterns": [{"name": "string", "template": "string", "complexity": "string"}], "tips": ["string"], "mustKnowProblems": ["string"] }`
   );
 };
 
-module.exports = {
-  callAI,
-  runSolverChain,
-  runAnalyzerAgent,
-  runPatternAgent,
-  runReviewAgent,
-  runCheatSheetAgent
-};
+module.exports = { callAI, runSolverChain, runAnalyzerAgent, runPatternAgent, runReviewAgent, runCheatSheetAgent };

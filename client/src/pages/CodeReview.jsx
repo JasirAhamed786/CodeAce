@@ -121,12 +121,12 @@ export default function CodeReview() {
             <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 flex items-center justify-between shadow-xl">
               <div>
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Overall Grade</h3>
-                <div className={`text-5xl font-black ${getScoreColor(result.critique.overallScore)}`}>
-                  {result.critique.overallScore}<span className="text-2xl text-slate-600">/100</span>
+                <div className={`text-5xl font-black ${getScoreColor(result?.critique?.overallScore || 0)}`}>
+                  {result?.critique?.overallScore || 0}<span className="text-2xl text-slate-600">/100</span>
                 </div>
               </div>
-              <div className={`px-4 py-2 rounded-xl font-bold text-sm border ${result.understanding.isCorrect ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'}`}>
-                {result.understanding.isCorrect ? '✓ LOGIC CORRECT' : '✕ LOGIC FLAWED'}
+              <div className={`px-4 py-2 rounded-xl font-bold text-sm border ${result?.understanding?.isCorrect ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'}`}>
+                {result?.understanding?.isCorrect ? '✓ LOGIC CORRECT' : '✕ LOGIC FLAWED'}
               </div>
             </div>
 
@@ -134,7 +134,7 @@ export default function CodeReview() {
             <div className="md:col-span-2 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Reviewer's Understanding</h3>
               <p className="text-slate-300 text-sm leading-relaxed">
-                {result.understanding.understanding}
+                {result?.understanding?.understanding || 'No understanding provided.'}
               </p>
             </div>
           </div>
@@ -150,7 +150,7 @@ export default function CodeReview() {
                 </h3>
               </div>
               <div className="p-0">
-                {result.critique.bugs.length === 0 ? (
+                {(result?.critique?.bugs || []).length === 0 ? (
                   <div className="p-6 text-center text-slate-500 text-sm">No critical bugs found. Great job!</div>
                 ) : (
                   <ul className="divide-y divide-slate-800">
@@ -177,7 +177,7 @@ export default function CodeReview() {
               <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-xl">
                 <h3 className="text-sm font-bold text-orange-400 uppercase tracking-wide mb-3">Edge Cases Missed</h3>
                 <ul className="space-y-2">
-                  {result.critique.edgeCasesMissed.length === 0 ? (
+                  {(result?.critique?.edgeCasesMissed || []).length === 0 ? (
                     <li className="text-slate-500 text-sm">All edge cases handled.</li>
                   ) : (
                     result.critique.edgeCasesMissed.map((ec, i) => (
@@ -192,7 +192,7 @@ export default function CodeReview() {
               <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-xl">
                 <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-wide mb-3">Style & Best Practices</h3>
                 <ul className="space-y-2">
-                  {result.critique.styleIssues.length === 0 ? (
+                  {(result?.critique?.styleIssues || []).length === 0 ? (
                     <li className="text-slate-500 text-sm">Code style looks professional.</li>
                   ) : (
                     result.critique.styleIssues.map((style, i) => (
@@ -220,7 +220,7 @@ export default function CodeReview() {
                 <Editor 
                   height="350px" 
                   language={language.toLowerCase()} 
-                  value={result.refactor.refactoredCode} 
+                  value={result?.refactor?.refactoredCode || '// No refactor provided'} 
                   theme="vs-dark" 
                   options={{ readOnly: true, minimap: { enabled: false }, fontSize: 14, padding: { top: 16 } }} 
                 />
@@ -231,22 +231,30 @@ export default function CodeReview() {
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Why this is better</h4>
                   <ul className="space-y-3">
-                    {result.refactor.changesExplained.map((change, i) => (
-                      <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
-                        <span className="text-green-500 mt-0.5">✓</span> {change}
-                      </li>
-                    ))}
+                    {(result?.refactor?.changesExplained || []).length === 0 ? (
+                      <li className="text-sm text-slate-500 italic">No explanation provided.</li>
+                    ) : (
+                      result.refactor.changesExplained.map((change, i) => (
+                        <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
+                          <span className="text-green-500 mt-0.5">✓</span> {change}
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </div>
                 
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Senior Tips</h4>
                   <ul className="space-y-3">
-                    {result.refactor.seniorTips.map((tip, i) => (
-                      <li key={i} className="text-sm text-slate-300 bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
-                        <span className="font-bold text-purple-400 mr-1">Tip:</span> {tip}
-                      </li>
-                    ))}
+                    {(result?.refactor?.seniorTips || []).length === 0 ? (
+                      <li className="text-sm text-slate-500 italic">No tips provided.</li>
+                    ) : (
+                      result.refactor.seniorTips.map((tip, i) => (
+                        <li key={i} className="text-sm text-slate-300 bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                          <span className="font-bold text-purple-400 mr-1">Tip:</span> {tip}
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </div>
               </div>
