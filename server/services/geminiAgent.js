@@ -197,4 +197,4 @@ const runCheatSheetAgent = async (topic, language) => {
   );
 };
 
-module.exports = { callAI, runSolverChain, runAnalyzerAgent, runPatternAgent, runReviewAgent, runCheatSheetAgent };
+module.exports = { callAI, runSolverChain, runAnalyzerAgent, runPatternAgent, runReviewAgent, runCheatSheetAgent, };

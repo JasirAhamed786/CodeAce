@@ -139,10 +139,31 @@ const generateHRReport = async (
      }`
   );
 };
-
+const simulateCodeRun = async (code, language, problemTitle) => {
+  return await callAI(
+    "You are a strict, unforgiving code compiler and execution engine simulator. Return ONLY raw JSON, no markdown.",
+    `Simulate compiling and running this code for the problem: "${problemTitle}".
+     The user explicitly selected the language: ${language}.
+     
+     Code to compile: 
+     \n${code}\n
+     
+     CRITICAL INSTRUCTIONS:
+     1. LANGUAGE CHECK: First, verify that the code syntax actually matches ${language}. If the code is clearly written in a completely different language (e.g., Python code submitted when Java is selected), you MUST reject it. Return success: false and output a realistic compiler syntax error (e.g., "error: class, interface, or enum expected" if expecting Java). Do NOT execute the code.
+     2. SYNTAX CHECK: If the language matches but has syntax errors, return success: false and the exact error trace.
+     3. EXECUTE: If it is valid ${language} and runs successfully, simulate exactly what the console output would be based on the logic.
+     
+     Return EXACTLY this JSON structure:
+     {
+       "success": true,
+       "output": "string of the simulated console output or error trace"
+     }`
+  );
+};
 module.exports = {
   startTechnicalInterview,
   evaluateTechnicalSolution,
   runHRSession,
-  generateHRReport
+  generateHRReport,
+  simulateCodeRun
 };
