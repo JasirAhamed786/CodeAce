@@ -18,7 +18,7 @@ const callAI = async (systemPrompt, userMessage) => {
     const fullSystemPrompt = `${systemPrompt} Return ONLY a raw JSON object. Do not include markdown code blocks, do not include conversational text, do not include explanations.`;
 
     if (useGemini) {
-      const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+      const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
       const response = await ai.models.generateContent({
         model: modelName,
         contents: userMessage,
@@ -147,15 +147,53 @@ const runPatternAgent = async (problem, language) => {
 
 const runReviewAgent = async (code, problem, language) => {
   return await callAI(
-    `You are a FAANG reviewer. Return valid JSON only. Booleans must be true/false.`,
-    `Code: ${code}. Return JSON: { "understanding": { "isCorrect": true }, "critique": { "overallScore": 10, "bugs": [] }, "refactor": { "refactoredCode": "string" } }`
+    `You are a strict FAANG Senior Engineer reviewing code. You MUST populate EVERY field in the JSON schema. Return JSON only.`,
+    `Problem: ${problem}. Language: ${language}. Code: ${code}. 
+    
+    Return EXACTLY this JSON structure. You must use these exact keys:
+    {
+      "understanding": { 
+        "isCorrect": false,
+        "text": "Detailed explanation of what the candidate's code is doing and where it fails."
+      }, 
+      "critique": { 
+        "overallScore": 40, 
+        "bugs": [
+          { "line": "12", "issue": "Describe the logic flaw", "fix": "Describe how to fix it" }
+        ],
+        "edgeCasesMissed": ["List ONLY edge cases that the code fails to handle. If the code handles all edge cases perfectly, this array MUST be completely empty: []"],
+        "styleAndBestPractices": ["List style tip 1", "List readability improvement"]
+      }, 
+      "refactor": { 
+        "refactoredCode": "Write the full production-ready code here",
+        "whyThisIsBetter": "Explain why this refactored version is optimal.",
+        "seniorTips": ["Pro tip 1", "Pro tip 2"]
+      } 
+    }`
   );
 };
 
 const runCheatSheetAgent = async (topic, language) => {
   return await callAI(
-    `You are a DSA Curriculum Designer. Return JSON only.`,
-    `Create cheat sheet for: ${topic}. Return JSON: { "title": "string", "overview": "string", "patterns": [{"name": "string", "template": "string", "complexity": "string"}], "tips": ["string"], "mustKnowProblems": ["string"] }`
+    `You are an expert FAANG Curriculum Designer. You must return valid JSON only.`,
+    `Create a highly detailed cheat sheet for: ${topic} in ${language}. 
+    
+    You MUST return this EXACT JSON structure. 
+    CRITICAL: For the "template" field, provide robust, multi-line code examples (10-15 lines). You MUST use explicit '\\n' characters for line breaks so the code renders on multiple lines in the UI. Do NOT write single-line code.
+    
+    { 
+      "title": "string", 
+      "overview": "string", 
+      "patterns": [
+        {
+          "name": "string", 
+          "template": "Detailed, multi-line code goes here. Use \\n for newlines.", 
+          "complexity": "string"
+        }
+      ], 
+      "tips": ["string"], 
+      "mustKnowProblems": ["string"] 
+    }`
   );
 };
 
