@@ -32,7 +32,7 @@ app.use('/api/mock',     require('./routes/mock'));
 app.use('/api/sessions', require('./routes/sessions'));
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', model: 'llama-3.3-70b-versatile' });
+  res.json({ status: 'ok', model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile' });
 });
 
 app.listen(process.env.PORT || 5000, () => {

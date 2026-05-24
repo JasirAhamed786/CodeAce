@@ -11,8 +11,10 @@ const callAI = async (systemPrompt, userMessage) => {
     throw new Error('Missing GROQ_API_KEY or GEMINI_API_KEY in server/.env');
   }
 
+  // 👉 FIXED: Moved outside the try block so the catch block can safely read it
+  let text = ''; 
+
   try {
-    let text = '';
     const fullSystemPrompt = `${systemPrompt} Return ONLY a raw JSON object. Do not include markdown code blocks, do not include conversational text, do not include explanations.`;
 
     if (useGemini) {
@@ -44,6 +46,7 @@ const callAI = async (systemPrompt, userMessage) => {
 
     return JSON.parse(cleanText);
   } catch (e) {
+    // Now it can safely read 'text' here if Groq throws an error!
     console.error("AI Parse Error. Raw Output:", text);
     throw new Error(`AI Agent parsing failed: ${e.message}`);
   }
