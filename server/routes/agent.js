@@ -9,9 +9,19 @@ const save = async (type, input, output, language, score = 0) => {
   if (type === 'Problem Solver') summary = `Solved: ${output.classification?.pattern || 'Algorithm'}`;
   if (type === 'Pattern Recognizer') summary = `Detected: ${output.detection?.primaryPattern || 'Pattern'}`;
   if (type === 'Code Review') summary = `Scored: ${output.critique?.overallScore || score}/100`;
-
-  // Provide a generic 'me' userId so it doesn't crash if Auth isn't set up yet
-  return await Session.create({ userId: 'me', type, input, output, language, score, summary, createdAt: new Date() });
+console.log("🔥 SAVING TO DB. Output looks like:", typeof output); // ADD THIS LINE
+  // Provide a generic 'me' userId. 
+  // CRITICAL FIX: Storing 'output' in the 'data' field so the frontend can read it!
+  return await Session.create({ 
+    userId: 'me', 
+    type, 
+    input, 
+    data: output, // Mapping the AI's output to the 'data' field
+    language, 
+    score, 
+    summary, 
+    createdAt: new Date() 
+  });
 };
 
 router.post('/solve', async (req, res) => {

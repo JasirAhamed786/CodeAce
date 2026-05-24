@@ -6,8 +6,6 @@ const SessionSchema = new mongoose.Schema({
     default: 'guest' 
   },
   
-  // Changed from restrictive 'mode' enum to a flexible 'type' string.
-  // This matches the frontend expectations (e.g., "Problem Solver", "Code Review")
   type: { 
     type: String, 
     required: true 
@@ -17,8 +15,8 @@ const SessionSchema = new mongoose.Schema({
     type: String 
   },
   
-  // This safely holds the massive JSON objects returned by the Mega-Prompts
-  output: { 
+  // 👉 CHANGED 'output' to 'data' to match the frontend and route!
+  data: { 
     type: mongoose.Schema.Types.Mixed 
   },
   
@@ -31,14 +29,12 @@ const SessionSchema = new mongoose.Schema({
     default: 0
   },
 
-  // Added this field so your Session History dashboard has clean, readable subtitles
   summary: { 
     type: String 
   },
   
   weakPatterns: [String],
   
-  // Changed from 'timestamp' to standard 'createdAt' to match React Date formatting
   createdAt: { 
     type: Date, 
     default: Date.now 
