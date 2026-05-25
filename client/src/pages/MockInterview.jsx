@@ -1,22 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
-import { startTechnicalMock, sendHRMessage, getHRReport, evaluateTechnicalCode } from '../services/agentAPI';
+import { startTechnicalMock, sendHRMessage, evaluateTechnicalCode } from '../services/agentAPI';
 
 const TOPICS = ['Arrays & Hashing', 'Two Pointers', 'Trees', 'Dynamic Programming', 'Graphs'];
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
 const LANGUAGES = ['Python', 'JavaScript', 'Java', 'C++'];
 
-// ✅ Piston API Language Mapping
-const PISTON_LANGUAGES = {
-  'Python': { language: 'python', version: '3.10.0' },
-  'JavaScript': { language: 'javascript', version: '18.15.0' },
-  'Java': { language: 'java', version: '15.0.2' },
-  'C++': { language: 'cpp', version: '10.2.0' }
-};
-
 export default function MockInterview() {
-  const [mode, setMode] = useState('technical'); // 'technical' | 'hr'
+  const [mode, setMode] = useState('technical');
   const chatEndRef = useRef(null);
 
   // --- Technical State ---
@@ -51,7 +43,6 @@ export default function MockInterview() {
       const res = await startTechnicalMock(difficulty.toLowerCase(), topic.toLowerCase());
       setProblem(res.data?.data || res.data);
       
-      // Starter templates based on language
       const templates = {
         'Python': 'def solution():\n    # Write your code here\n    pass\n\nprint("Test Output:", solution())',
         'JavaScript': 'function solution() {\n    // Write your code here\n}\n\nconsole.log("Test Output:", solution());',
@@ -69,14 +60,11 @@ export default function MockInterview() {
     }
   };
 
-  // ✅ THE TRUE MULTI-LANGUAGE COMPILER (Using Piston API)
+  // ✅ FIXED: Removed duplicate function declaration and wired to backend
   const handleRunCode = async () => {
-    const handleRunCode = async () => {
     if (!code.trim()) {
       setRunOutput("> ⚠️ Warning: The editor is empty. Please write some code to run.");
       return;
-    }
-    // ... rest of the function stays exactly the same
     }
     
     setIsRunning(true);
@@ -84,7 +72,6 @@ export default function MockInterview() {
 
     try {
       if (language.toLowerCase() === 'javascript') {
-        // FAST NATIVE JAVASCRIPT EXECUTION
         let logs = [];
         const originalLog = console.log;
         console.log = (...args) => {
@@ -102,10 +89,8 @@ export default function MockInterview() {
           console.log = originalLog; 
         }
       } else {
-        // AI VIRTUAL COMPILER FOR PYTHON, JAVA, C++
         setRunOutput(prev => prev + `> Sending to AI Virtual Compiler...\n`);
         
-        // 2. THIS IS THE DIRECT CALL TO YOUR BACKEND
         const res = await axios.post('http://localhost:5001/api/mock/technical/run', {
           code: code,
           language: language,
@@ -126,9 +111,10 @@ export default function MockInterview() {
       setIsRunning(false);
     }
   };
+
   const handleSubmitTech = async () => {
     if (!code.trim() || code.includes('Write your')) {
-      alert("Please write a solution before submitting!");
+      alert("⚠️ Please write a solution before submitting to the AI!");
       return;
     }
 
@@ -151,6 +137,7 @@ export default function MockInterview() {
     setHrState('chatting');
   };
 
+  // ✅ FIXED: Fixed the "Parrot" bug to properly extract HR's response
   const handleSendHR = async () => {
     if (!currentInput.trim()) return;
     
@@ -163,7 +150,13 @@ export default function MockInterview() {
     try {
       const stringHistory = updatedHistory.map(m => `${m.role === 'ai' ? 'Interviewer' : 'Candidate'}: ${m.text}`);
       const res = await sendHRMessage(stringHistory, userMsg, updatedHistory.length, 'behavioral');
-      setChatHistory(prev => [...prev, { role: 'ai', text: res.data?.data?.response || res.data?.response || "That's interesting. Can you elaborate?" }]);
+      
+      const aiData = res.data?.data || res.data;
+      const aiReply = aiData?.sarahResponse 
+        ? `${aiData.sarahResponse} ${aiData.nextQuestion || ''}`
+        : "That's interesting. Can you elaborate?";
+
+      setChatHistory(prev => [...prev, { role: 'ai', text: aiReply }]);
     } catch (e) {
       console.error(e);
       setChatHistory(prev => [...prev, { role: 'ai', text: "[System Error: Connection to Recruiter lost]" }]);
@@ -172,12 +165,17 @@ export default function MockInterview() {
     }
   };
 
+  // ✅ FIXED: Used explicit axios call to ensure the report generates properly
   const handleEndHR = async () => {
     setHrLoading(true);
     try {
       const stringHistory = chatHistory.map(m => `${m.role === 'ai' ? 'Interviewer' : 'Candidate'}: ${m.text}`);
-      const res = await getHRReport(stringHistory);
-      setHrReport(res.data?.data || res.data || { score: 85, feedback: "Good communication skills. Try using the STAR method more clearly next time." });
+      const res = await axios.post('http://localhost:5001/api/mock/hr/report', {
+        conversationHistory: stringHistory,
+        allEvaluations: [], 
+        interviewType: 'behavioral'
+      });
+      setHrReport(res.data?.data || res.data);
       setHrState('report');
     } catch (e) {
       console.error(e);
@@ -413,10 +411,11 @@ export default function MockInterview() {
                   <div className="text-center bg-slate-800 px-4 py-2 rounded-xl border border-slate-700">
                      <span className="text-xs text-slate-400 uppercase font-bold block">Score</span>
                      <span className="text-xl text-pink-400 font-black">
-  {evaluation?.assessment?.overallScore !== undefined 
-    ? `${evaluation.assessment.overallScore}/${evaluation.assessment.overallScore <= 10 ? 10 : 100}` 
-    : 'N/A'}
-</span>
+                        {/* ✅ FIXED: Smart Score formatting (/10 or /100) */}
+                        {evaluation?.assessment?.overallScore !== undefined 
+                          ? `${evaluation.assessment.overallScore}/${evaluation.assessment.overallScore <= 10 ? 10 : 100}` 
+                          : 'N/A'}
+                     </span>
                   </div>
                   <button onClick={() => {setTechState('setup'); setCode(''); setRunOutput('');}} className="bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold border border-slate-600 transition-colors">
                     Run Another Mock
@@ -517,10 +516,11 @@ export default function MockInterview() {
               <div className="text-center border-b border-slate-800 pb-6">
                 <h2 className="text-2xl font-bold text-white mb-2">Recruiter Feedback</h2>
                 <div className="text-5xl font-black text-pink-400 my-4">
-  {hrReport?.overallScore !== undefined || hrReport?.score !== undefined 
-    ? `${hrReport.overallScore || hrReport.score}/${(hrReport.overallScore || hrReport.score) <= 10 ? 10 : 100}` 
-    : '85/100'}
-</div>
+                  {/* ✅ FIXED: Smart Score formatting for HR */}
+                  {hrReport?.overallScore !== undefined || hrReport?.score !== undefined 
+                    ? `${hrReport.overallScore || hrReport.score}/${(hrReport.overallScore || hrReport.score) <= 10 ? 10 : 100}` 
+                    : '85/100'}
+                </div>
               </div>
               
               <div className="bg-slate-950 p-6 rounded-xl border border-slate-800">
