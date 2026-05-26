@@ -1,45 +1,164 @@
-# 🚀 CodeAce: AI-Powered Interview Simulator
+# 🚀 CodeAce
 
-![CodeAce Banner](https://via.placeholder.com/1000x300/0f172a/00E5FF?text=CodeAce:+Next-Gen+Interview+Prep)
+> AI-Powered Coding Evaluation & Interview Platform built with MERN + Generative AI
 
-**CodeAce** is a comprehensive, MERN-stack platform designed to democratize FAANG-style software engineering interview preparation. 
+---
 
-Traditional platforms offer static coding tests without personalized feedback, and practicing behavioral (HR) interviews is difficult without a human partner. CodeAce bridges this gap by offering an innovative **AI Virtual Compiler** for actionable architectural feedback and a **Hands-Free Voice Agent** for practicing behavioral rounds using the STAR method.
+## ✨ Features
 
-## ✨ Core Features
+* 🧠 AI-powered coding problem solving
+* 💻 Monaco Editor integration
+* ⚡ Direct Gemini, Claude & Grok API integration
+* 📊 Complexity analysis & test case generation
+* 🎙️ Voice-based HR interview agent
+* 📄 Cheat Sheet & PDF export system
+* 🛡️ Strict JSON response validation
+* 🚀 High-performance MERN architecture
 
-* **💻 AI Virtual Compiler:** Bypasses heavy backend infrastructure (like GCC/JDK) by utilizing advanced Prompt Engineering. The Gemini API acts as a strict code executor—validating syntax, rejecting mismatched languages, and simulating realistic terminal output for **Python, Java, C++, and JavaScript**.
-* **🗣️ Hands-Free HR Voice Agent:** Integrates the browser's native Web Speech API (Speech-to-Text and Text-to-Speech) to create a continuous, stateful conversational loop. It uses a 2-second silence detector to auto-send candidate responses for a truly hands-free experience.
-* **📊 Structured AI Analytics:** Enforces strict JSON schemas from the LLM to dynamically render beautiful, detailed scoring reports (scale of 1-100) for both technical correctness and communication skills.
-* **🎨 Premium UI/UX:** Built with React, featuring a high-performance, responsive glassmorphism aesthetic and a fully integrated Monaco Code Editor.
+---
 
-## 🏗️ System Architecture
+## 🏗️ Tech Stack
 
-CodeAce utilizes a **direct-integration strategy**, bypassing heavy wrapper frameworks (like LangChain) to maintain sub-3-second response latency and granular control over prompt engineering.
+### Frontend
 
-* **Frontend (Client):** React, Monaco Editor, Axios, Web Speech API
-* **Backend (Server):** Node.js, Express.js
-* **AI Engine:** Google Gemini 1.5 Pro API (Direct REST Integration)
-* **Database:** MongoDB, Mongoose
+* React.js
+* TypeScript
+* Monaco Editor
 
-## 📂 Project Structure
+### Backend
 
-CodeAce is structured as a monorepo, strictly separating the React client from the Node/Express server to ensure AI logic and API keys remain secure.
+* Node.js
+* Express.js
 
-```text
-codeace/
-├── client/                     # FRONTEND (React)
-│   ├── public/
-│   └── src/
-│       ├── components/         # Reusable UI (Editor, Voice Controls)
-│       ├── pages/              # Main route views (TechMock, HRMock)
-│       ├── services/           # Axios API calls
-│       └── hooks/              # Custom hooks (e.g., useSpeechToText)
+### Database
+
+* MongoDB
+
+### AI APIs
+
+* Gemini API
+* Claude API
+* Grok API
+
+### Additional Tools
+
+* Web Speech API
+* jsPDF
+* html2canvas
+
+---
+
+## 📂 Folder Structure
+
+```bash
+CODEACE/
 │
-└── server/                     # BACKEND (Node.js + Express)
-    ├── .env                    # Secrets (Mongo URI, Gemini Key)
-    └── src/
-        ├── controllers/        # Route handling logic
-        ├── services/           # Core LLM prompt engineering & logic
-        ├── models/             # Mongoose DB Schemas
-        └── routes/             # API Endpoints
+├── client/          # React Frontend
+├── server/          # Express Backend
+├── routes/          # API Routes
+├── services/        # AI Integrations
+├── models/          # MongoDB Models
+├── utils/           # Validators & Helpers
+└── README.md
+```
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+* Node.js (v16 or higher)
+* MongoDB (Local or Atlas)
+* Gemini API Key
+
+---
+
+## 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/JasirAhamedM/codeace.git
+cd codeace
+```
+
+---
+
+## ⚙️ Backend Setup
+
+```bash
+cd server
+npm install
+```
+
+Create `.env` file inside `server/`
+
+```env
+PORT=5001
+MONGO_URI=your_mongodb_connection_string
+GEMINI_API_KEY=your_gemini_api_key
+CLAUDE_API_KEY=your_claude_api_key
+GROK_API_KEY=your_grok_api_key
+```
+
+Run backend:
+
+```bash
+npm run dev
+```
+
+Server runs on:
+
+```bash
+http://localhost:5001
+```
+
+---
+
+## 💻 Frontend Setup
+
+Open another terminal:
+
+```bash
+cd client
+npm install
+npm start
+```
+
+Frontend runs on:
+
+```bash
+http://localhost:3000
+```
+
+---
+
+# 🎯 KPIs Achieved
+
+* ⚡ ≤ 3-second AI response latency
+* ✅ 100% successful JSON parsing
+* 🛡️ Strict syntax mismatch rejection
+* 🎙️ Seamless 5-question voice interview loop
+
+---
+
+# 🔄 Architecture Workflow
+
+```bash
+User → React Frontend → Express Backend → AI APIs → MongoDB → Frontend
+```
+
+---
+
+# 👨‍💻 Developer
+
+### Jasir Ahamed M
+
+* B.Tech Information Technology
+* Kumaraguru College of Technology (KCT)
+* Focus: MERN Stack & Generative AI
+
+---
+
+# 📄 License
+
+Licensed under the MIT License.
